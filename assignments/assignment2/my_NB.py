@@ -30,15 +30,21 @@ class my_NB:
         # Calculating self.P
 
         featureList = list(X.columns)
+        column_values = []
+        for col in X:
+            uniqueVal = list(set(list(X[col])))
+            column_values.append(uniqueVal)
 
         for feature in featureList:
             for classVal in self.classes_:
                 self.P[classVal][feature] = {}
-                featureLikelihood = X[feature][y[y == classVal].index.values.tolist()].value_counts().to_dict()
-                for featureVal, featureCount in featureLikelihood.items():
-                    l = ((featureCount + self.alpha) / (self.P_y[classVal] + (len(Counter(X[feature]).keys())*self.alpha)))
-                    self.P[classVal][feature][featureVal] = l
 
+        for feature in featureList:
+            for featureVal in column_values[feature]:
+                for classVal in self.classes_:
+                    featureCount = X.loc[(y == classVal) & (X[feature] == featureVal), feature].count()
+                    featureLikelihood = ((featureCount + self.alpha) / (self.P_y[classVal] + (len(column_values[feature]) * self.alpha)))
+                    self.P[classVal][feature][featureVal] = featureLikelihood
         return
 
     def predict_proba(self, X):
