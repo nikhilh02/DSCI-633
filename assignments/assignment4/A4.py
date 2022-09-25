@@ -1,4 +1,4 @@
-from my_DT_hint import my_DT
+from my_DT import my_DT
 import pandas as pd
 
 if __name__ == "__main__":
