@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from collections import Counter
+import math
 
 
 class my_DT:
@@ -16,27 +17,37 @@ class my_DT:
         self.min_impurity_decrease = min_impurity_decrease
         self.min_samples_split = int(min_samples_split)
 
-
     def impurity(self, labels):
+
+        # print(labels)
         # Calculate impurity (unweighted)
         # Input is a list (or np.array) of labels
         # Output impurity score
+        impure = 0
         stats = Counter(labels)
         N = float(len(labels))
+        totalKeys = stats.keys()
+
         if self.criterion == "gini":
             # Implement gini impurity
-
-
-
+            sum = 0
+            for x in totalKeys:
+                # print(stats[x])
+                # print(N)
+                sum += ((stats[x] / N) ** 2)
+            impure = 1 - sum
 
         elif self.criterion == "entropy":
             # Implement entropy impurity
-
-
-
+            sum = 0
+            for x in totalKeys:
+                temp = stats[x] / N
+                sum += (temp * math.log(temp, 2))
+            impure = sum
 
         else:
             raise Exception("Unknown criterion.")
+
         return impure
 
     def find_best_split(self, pop, X, labels):
@@ -48,10 +59,55 @@ class my_DT:
         # Output: tuple(best feature to split, weighted impurity score of best split, splitting point of the feature, [indices of data in left node, indices of data in right node], [weighted impurity score of left node, weighted impurity score of right node])
         ######################
         best_feature = None
+        self.X = X
+        return best_feature
+        best_feature = ()
+        giniList = []
+        totalAvgList = []
+        minGini = 0
         for feature in X.keys():
             cans = np.array(X[feature][pop])
 
+            # Starting per feature check for gini
+            avgVal = []
+            weightVal = []
+            for i, featureVal in enumerate(cans):
+                if (i == 0):
+                    continue
+                val = (cans[i] + cans[i - 1]) / 2
 
+                l1 = np.array(labels[0:i])
+                l2 = np.array(labels[i:])
+                l1Gini = self.impurity(l1)
+                l2Gini = self.impurity(l2)
+
+                weightedVal = ((len(l1) / len(labels)) * l1Gini) + ((len(l2) / len(labels)) * l2Gini)
+                weightVal.append(weightedVal)
+
+                avgVal.append([val, i])
+
+            tempMin = min(weightVal)
+            giniList.append(tempMin)
+            totalAvgList.append(avgVal[weightVal.index(tempMin)])
+
+        minGini = min(giniList)
+        minIndex = giniList.index(minGini)
+        tempDetails = totalAvgList[minIndex]
+
+        best_featureVal = X.keys()[minIndex]
+        scoreBestSplit = minGini
+        splittingPoint = tempDetails[0]
+        indices = [
+            list(range(tempDetails[1])),
+            list(range(tempDetails[1], len(labels)))
+        ]
+
+        l1 = np.array(labels[0:tempDetails[1]])
+        l2 = np.array(labels[tempDetails[1]:])
+        l1Gini = self.impurity(l1)
+        l2Gini = self.impurity(l2)
+
+        best_feature = (best_featureVal, scoreBestSplit, splittingPoint, indices, [l1Gini, l2Gini])
 
         return best_feature
 
@@ -69,8 +125,9 @@ class my_DT:
         self.tree = {}
         # population keeps the indices of data points in each node
         population = {0: np.array(range(N))}
-        # impurity stores the weighted impurity scores for each node (# data in node * unweighted impurity). 
+        # impurity stores the weighted impurity scores for each node (# data in node * unweighted impurity).
         # NOTE: for simplicity reason we do not divide weighted impurity score by N here.
+
         impurity = {0: self.impurity(labels[population[0]]) * N}
         #########################################################################
         level = 0
@@ -133,11 +190,14 @@ class my_DT:
         for i in range(len(X)):
             node = 0
             while True:
-                if type(self.tree[node]) == Counter:               
+                if type(self.tree[node]) == Counter:
                     # Calculate prediction probabilities for data point arriving at the leaf node.
                     # predictions = list of prob, e.g. prob = {"2": 1/3, "1": 2/3}
-                    prob = {"write your own code"}
+                    # prob = {"write your own code"}
+                    prob = self.tree[node]
+                    prob = {key: value / len(self.X) for key, value in self.tree[node].items()}
                     predictions.append(prob)
+                    # print(prob)
                     break
                 else:
                     if X[self.tree[node][0]][i] < self.tree[node][1]:
