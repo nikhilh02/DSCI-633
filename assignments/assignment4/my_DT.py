@@ -3,10 +3,9 @@ import numpy as np
 from collections import Counter
 import math
 
-
 class my_DT:
 
-    def __init__(self, criterion="gini", max_depth=8, min_impurity_decrease=0, min_samples_split=2):
+    def __init__(self, criterion="entropy", max_depth=8, min_impurity_decrease=0, min_samples_split=2):
         # criterion = {"gini", "entropy"},
         # Stop training if depth = max_depth
         # Only split node if impurity decrease >= min_impurity_decrease after the split
@@ -18,8 +17,6 @@ class my_DT:
         self.min_samples_split = int(min_samples_split)
 
     def impurity(self, labels):
-
-        # print(labels)
         # Calculate impurity (unweighted)
         # Input is a list (or np.array) of labels
         # Output impurity score
@@ -40,7 +37,7 @@ class my_DT:
             sum = 0
             for x in totalKeys:
                 temp = stats[x] / N
-                sum += (temp * math.log(temp, 2))
+                sum -= (temp * math.log(temp, 2))
             impure = sum
 
         else:
@@ -49,63 +46,40 @@ class my_DT:
         return impure
 
     def find_best_split(self, pop, X, labels):
-        # Find the best split
-        # Inputs:
-        #   pop:    indices of data in the node
-        #   X:      independent variables of training data
-        #   labels: dependent variables of training data
-        # Output: tuple(best feature to split, weighted impurity score of best split, splitting point of the feature, [indices of data in left node, indices of data in right node], [weighted impurity score of left node, weighted impurity score of right node])
-        ######################
         best_feature = None
-        self.X = X
-        return best_feature
-        best_feature = ()
-        giniList = []
-        totalAvgList = []
-        minGini = 0
         for feature in X.keys():
             cans = np.array(X[feature][pop])
+            listLen = len(cans)
+            sortedArr = np.argsort(cans)
 
-            # Starting per feature check for gini
-            avgVal = []
-            weightVal = []
-            for i, featureVal in enumerate(cans):
-                if (i == 0):
-                    continue
-                val = (cans[i] + cans[i - 1]) / 2
+            avgImpurity = []
+            tempImpVal = []
 
-                l1 = np.array(labels[0:i])
-                l2 = np.array(labels[i:])
-                l1Gini = self.impurity(l1)
-                l2Gini = self.impurity(l2)
+            for i in range(listLen - 1):
+                if (cans[sortedArr[i]] == cans[sortedArr[i + 1]]):
+                    avgImpurity.append([])
+                else:
+                    avgImpurity.append([
+                        self.impurity(labels[pop[sortedArr[:i + 1]]]) * (i + 1),
+                        self.impurity(labels[pop[sortedArr[i + 1:]]]) * (listLen - i - 1)
+                    ])
 
-                weightedVal = ((len(l1) / len(labels)) * l1Gini) + ((len(l2) / len(labels)) * l2Gini)
-                weightVal.append(weightedVal)
+                if (cans[sortedArr[i]] == cans[sortedArr[i + 1]]):
+                    tempImpVal.append(np.inf)
+                else:
+                    tempImpVal.append(np.sum(avgImpurity[-1]))
 
-                avgVal.append([val, i])
+            minFeatureImpurity = np.min(tempImpVal)
 
-            tempMin = min(weightVal)
-            giniList.append(tempMin)
-            totalAvgList.append(avgVal[weightVal.index(tempMin)])
-
-        minGini = min(giniList)
-        minIndex = giniList.index(minGini)
-        tempDetails = totalAvgList[minIndex]
-
-        best_featureVal = X.keys()[minIndex]
-        scoreBestSplit = minGini
-        splittingPoint = tempDetails[0]
-        indices = [
-            list(range(tempDetails[1])),
-            list(range(tempDetails[1], len(labels)))
-        ]
-
-        l1 = np.array(labels[0:tempDetails[1]])
-        l2 = np.array(labels[tempDetails[1]:])
-        l1Gini = self.impurity(l1)
-        l2Gini = self.impurity(l2)
-
-        best_feature = (best_featureVal, scoreBestSplit, splittingPoint, indices, [l1Gini, l2Gini])
+            if (best_feature == None or best_feature[1] > minFeatureImpurity) and minFeatureImpurity < np.inf:
+                splittingVal = np.argmin(tempImpVal)
+                best_feature = (
+                    feature,
+                    minFeatureImpurity,
+                    (cans[sortedArr][splittingVal] + cans[sortedArr][splittingVal + 1]) / 2.0,
+                    [pop[sortedArr[:splittingVal + 1]], pop[sortedArr[splittingVal + 1:]]],
+                    avgImpurity[splittingVal]
+                )
 
         return best_feature
 
@@ -193,8 +167,9 @@ class my_DT:
                     # predictions = list of prob, e.g. prob = {"2": 1/3, "1": 2/3}
                     # prob = {"write your own code"}
                     prob = self.tree[node]
-                    prob = {key: value / len(self.X) for key, value in self.tree[node].items()}
+                    prob = {key: value / (np.sum(list(self.tree[node].values()))) for key, value in self.tree[node].items()}
                     predictions.append(prob)
+
                     break
                 else:
                     if X[self.tree[node][0]][i] < self.tree[node][1]:
