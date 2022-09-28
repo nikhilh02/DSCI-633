@@ -5,7 +5,7 @@ import math
 
 class my_DT:
 
-    def __init__(self, criterion="entropy", max_depth=8, min_impurity_decrease=0, min_samples_split=2):
+    def __init__(self, criterion="gini", max_depth=8, min_impurity_decrease=0, min_samples_split=2):
         # criterion = {"gini", "entropy"},
         # Stop training if depth = max_depth
         # Only split node if impurity decrease >= min_impurity_decrease after the split
@@ -110,7 +110,7 @@ class my_DT:
             for node in nodes:
                 current_pop = population[node]
                 current_impure = impurity[node]
-                if len(current_pop) < self.min_samples_split or current_impure == 0:
+                if len(current_pop) < self.min_samples_split or current_impure == 0 or level+1 == self.max_depth:
                     # The node is a leaf node
                     self.tree[node] = Counter(labels[current_pop])
                 else:
