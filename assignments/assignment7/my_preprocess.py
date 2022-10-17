@@ -61,36 +61,31 @@ class my_normalizer:
         range = np.float64(maxVal - minVal)
         if self.norm == "Min-Max":
             # Write your own code below
-            normalizedVal = [ (item-minVal)/(maxVal-minVal) for item in x]
-            normalizedVal = np.array(normalizedVal)
-            normalizedVal = ( normalizedVal * (range)) + minVal
+            scaler = maxVal - minVal
+            offset = minVal
 
         elif self.norm == "L1":
             # Write your own code below
             totalSum = np.sum(np.abs(x))
-            for num in x:
-                normalizedVal.append(num / totalSum)
-            normalizedVal = np.array(normalizedVal)
+            scaler = totalSum
+            offset = 0
 
         elif self.norm == "L2":
             # Write your own code below
             l2_norm = np.sqrt(np.sum([num**2 for num in x]))
-            x_norm = [num / l2_norm for num in x]
-            normalizedVal = np.array(x_norm)
+            scaler = l2_norm
+            offset = 0
 
         elif self.norm == "Standard_Score":
             # Write your own code below
             mean = np.mean(x)
             stdDev = np.std(x)
-            x_norm = [(num - mean) / stdDev for num in x]
-            normalizedVal = np.array(x_norm)
+            scaler = stdDev
+            offset = mean
 
         else:
             raise Exception("Unknown normalization.")
 
-        #scaler = normalizedVal
-        scaler = np.std(normalizedVal)
-        offset = np.mean(normalizedVal)
         return offset, scaler
 
 class my_pca:
