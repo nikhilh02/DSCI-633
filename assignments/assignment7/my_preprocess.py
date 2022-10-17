@@ -55,12 +55,11 @@ class my_normalizer:
 
     def vector_norm(self, x):
         # Calculate the offset and scaler for input vector x
-        normalizedVal = []
-        maxVal = np.max(x)
-        minVal = np.min(x)
-        range = np.float64(maxVal - minVal)
+
         if self.norm == "Min-Max":
             # Write your own code below
+            maxVal = np.max(x)
+            minVal = np.min(x)
             scaler = maxVal - minVal
             offset = minVal
 
