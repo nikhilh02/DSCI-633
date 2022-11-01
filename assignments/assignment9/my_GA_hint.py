@@ -79,12 +79,14 @@ class my_GA:
             indices = [i for i in range(len(self.data_y))]
             np.random.shuffle(indices)
             size = int(np.ceil(len(self.data_y) / float(self.crossval_fold)))
-            objs_crossval = None
+            objs_crossval = []
             for fold in range(self.crossval_fold):
                 start = int(fold * size)
                 end = start + size
-                test_indices = indices["write your own code"]
-                train_indices = indices["write your own code"] + indices["write your own code"]
+                # test_indices = indices["write your own code"]
+                # train_indices = indices["write your own code"] + indices["write your own code"]
+                test_indices = indices[start: end]
+                train_indices = indices[0: start] + indices[end:]
                 X_train = self.data_X.loc[train_indices]
                 X_train.index = range(len(X_train))
                 X_test = self.data_X.loc[test_indices]
@@ -94,19 +96,22 @@ class my_GA:
                 y_test = self.data_y.loc[test_indices]
                 y_test.index = range(len(y_test))
                 clf.fit(X_train, y_train)
-                predictions = "write your own code"
+                predictions = clf.predict(X_test)  # "write your own code"
                 try:
-                    pred_proba = "write your own code"
+                    pred_proba = clf.predict_proba(X_test)  # "write your own code"
                 except:
                     pred_proba = None
-                actuals = "write your own code"
+                actuals = y_test  # "write your own code"
                 objs = np.array(self.obj_func(predictions, actuals, pred_proba))
-                if type(objs_crossval) == type(None):
-                    objs_crossval = "write your own code"
-                else:
-                    objs_crossval += "write your own code"
+                objs_crossval.append(objs)
+            # Take a mean of each fold of the cross validation result
+            # objs_crossval should become an 1-d array of the same size as objs
 
-            objs_crossval = objs_crossval / float(len(self.data_y))
+            zeroMat = np.zeros(len(objs_crossval[0]))
+            for p in range(len(objs_crossval)):
+                zeroMat += objs_crossval[p]
+
+            objs_crossval = np.array(zeroMat) / float(self.crossval_fold)
             self.evaluated[decision] = objs_crossval
         return self.evaluated[decision]
 
@@ -120,7 +125,17 @@ class my_GA:
         obj_a = self.evaluate(a)
         obj_b = self.evaluate(b)
         # write your own code below
-        if "write your own code":
+        positiveBatch = True
+        minOnePositive = False
+
+        for i in range(len(obj_a)):
+            if (obj_a[i] > obj_b[i]):
+                minOnePositive = True
+            if (obj_a[i] < obj_b[i]):
+                positiveBatch = False
+                break
+
+        if positiveBatch == True and minOnePositive == True:
             return 1
         else:
             return -1
@@ -138,18 +153,21 @@ class my_GA:
         modified = False
         for i in range(len(pf_best)):
             for j in range(len(pf_new)):
-                if "write your own code":
+                if self.is_better(pf_new[j], pf_best[i]) == 1:
                     pf_best[i] = pf_new[j]
                     pf_new.pop(j)
                     modified = True
                     break
         to_add = []
+
         for j in range(len(pf_new)):
             not_dominated = True
             for i in range(len(pf_best)):
-                if "write your own code":
+
+                if self.is_better(pf_best[i], pf_new[j]) == -1 or self.is_better(pf_best[i], pf_new[j]) == 0:
                     not_dominated = False
                     break
+
             if not_dominated:
                 to_add.append(j)
                 modified = True
@@ -196,8 +214,9 @@ class my_GA:
         # Write your own code below
         def cross(a, b):
             new_point = []
+            randomCentralVal = np.random.randint(len(a))
             for i in range(len(a)):
-                if "write your own code":
+                if i < randomCentralVal:  # "write your own code":
                     new_point.append(a[i])
                 else:
                     new_point.append(b[i])
@@ -216,9 +235,9 @@ class my_GA:
 
     def mutate(self):
         # Uniform random mutation:
-            # each decision value in each point of self.generation
-            # has the same probability self.mutation_rate of being mutated
-            # to a random valid value
+        # each decision value in each point of self.generation
+        # has the same probability self.mutation_rate of being mutated
+        # to a random valid value
         # If boundary in self.decision_boundary is integer, the mutated
         #  value must also be integer.
         # write your own code below
@@ -254,6 +273,3 @@ class my_GA:
             self.crossover()
             self.mutate()
         return self.pf_best
-
-
-

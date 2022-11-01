@@ -1,4 +1,4 @@
-from my_GA import my_GA
+from my_GA_hint import my_GA
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 ####### import my_evaluation#######
