@@ -107,11 +107,7 @@ class my_GA:
             # Take a mean of each fold of the cross validation result
             # objs_crossval should become an 1-d array of the same size as objs
 
-            zeroMat = np.zeros(len(objs_crossval[0]))
-            for p in range(len(objs_crossval)):
-                zeroMat += objs_crossval[p]
-
-            objs_crossval = np.array(zeroMat) / float(self.crossval_fold)
+            objs_crossval = np.mean(objs_crossval, axis=0)
             self.evaluated[decision] = objs_crossval
         return self.evaluated[decision]
 
