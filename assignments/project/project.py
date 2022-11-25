@@ -19,7 +19,7 @@ class my_model():
 
     def fit(self, X, y):
         # do not exceed 29 mins
-        
+
         self.preprocessor1 = TfidfVectorizer(stop_words='english', norm='l2', use_idf=False, smooth_idf=False)
         self.preprocessor2 = TfidfVectorizer(stop_words='english', norm='l2', use_idf=False, smooth_idf=False)
         self.preprocessor3 = TfidfVectorizer(stop_words='english', norm='l2', use_idf=False, smooth_idf=False)
@@ -31,13 +31,11 @@ class my_model():
         descProcess = descProcess.toarray()
         locProcess = self.preprocessor3.fit_transform(X["location"])
         locProcess = locProcess.toarray()
-        requirementsProcess = self.preprocessor4.fit_transform(X["requirements"])
-        requirementsProcess = requirementsProcess.toarray()
 
         numVal = X[["telecommuting", "has_company_logo", "has_questions"]]
         numVal = numVal.to_numpy()
         
-        XX = np.concatenate([titleProcess, descProcess, locProcess, requirementsProcess, numVal], axis=1)
+        XX = np.concatenate([titleProcess, descProcess, locProcess, numVal], axis=1)
 
         decision_keys = {"loss": ("hinge", "log_loss", "perceptron"), "penalty": ("l2", "l1"), "alpha": [0.0001, 0.01]}
         model = SGDClassifier()
@@ -46,6 +44,7 @@ class my_model():
         self.clf = RandomizedSearchCV(model, decision_keys, cv=5)
 
         self.clf.fit(XX,y)
+
         return
 
     def predict(self, X):
@@ -57,13 +56,11 @@ class my_model():
         descProcess = descProcess.toarray()
         locProcess = self.preprocessor3.transform(X["location"])
         locProcess = locProcess.toarray()
-        requirementsProcess = self.preprocessor4.transform(X["requirements"])
-        requirementsProcess = requirementsProcess.toarray()
 
         numVal = X[["telecommuting", "has_company_logo", "has_questions"]]
         numVal = numVal.to_numpy()
         
-        XX = np.concatenate([titleProcess, descProcess, locProcess, requirementsProcess, numVal], axis=1)
+        XX = np.concatenate([titleProcess, descProcess, locProcess, numVal], axis=1)
 
         XX = pd.DataFrame(XX)
 
